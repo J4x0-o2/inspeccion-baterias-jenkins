@@ -1,0 +1,24 @@
+{
+  "short_name": "Baterias",
+  "name": "Inspección de Baterías",
+  "description": "App corporativa para el registro y control de inspección de baterías.",
+  "icons": [
+    {
+      "src": "./images/62900.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "./images/62900.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#F3F4F6",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#2563eb",
+  "orientation": "portrait"
+}

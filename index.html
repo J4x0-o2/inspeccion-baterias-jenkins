@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspección de Baterías PWA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <nav class="bg-blue-600 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Registro de Baterías</h1>
+            <div id="status-indicator" class="flex items-center">
+                <span id="online-status" class="h-3 w-3 rounded-full bg-green-400 mr-2"></span>
+                <span id="status-text" class="text-sm">Online</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 max-w-2xl">
+        <form id="battery-form" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+            
+            <!-- Identificación -->
+            <section>
+                <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">1. Identificación</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <label class="block">
+                        <span class="text-gray-700">Referencia de batería *</span>
+                        <select id="refBateria" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                            <option value="244105472R">244105472R</option>
+                            <option value="244103506R">244103506R</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Fechas -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label class="block">
+                    <span class="text-gray-700">F. Inspección *</span>
+                    <input type="date" id="fechaInspeccion" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                </label>
+                <label class="block">
+                    <span class="text-gray-700">F. Fabricación *</span>
+                    <input type="date" id="fechaFabricacion" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                </label>
+                <label class="block">
+                    <span class="text-gray-700">F. Recarga *</span>
+                    <input type="date" id="fechaRecarga" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                </label>
+            </section>
+
+            <!-- Inspección Visual -->
+            <section>
+                <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">2. Inspección Visual</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-gray-700">Bornes</span>
+                        <select id="bornes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="OK">OK</option>
+                            <option value="NO OK">NO OK</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="text-gray-700">Calcomanías</span>
+                        <select id="calcomanias" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="OK">OK</option>
+                            <option value="NO OK">NO OK</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="text-gray-700">Tapones</span>
+                        <select id="tapones" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="OK">OK</option>
+                            <option value="NO OK">NO OK</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="text-gray-700">Fugas</span>
+                        <select id="fugas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="NO">NO</option>
+                            <option value="SÍ">SÍ</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Medidas Técnicas -->
+            <section>
+                <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">3. Medidas Técnicas</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-gray-700">Carga (V) *</span>
+                        <input type="number" step="0.01" id="carga" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Peso (kg) *</span>
+                        <input type="number" step="0.01" id="peso" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Fórmula *</span>
+                        <input type="number" id="formula" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Días (0-21) *</span>
+                        <input type="number" id="dias" min="0" max="21" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </label>
+                </div>
+            </section>
+
+            <!-- Otros -->
+            <section class="space-y-4">
+                <label class="block">
+                    <span class="text-gray-700">Inspector *</span>
+                    <input type="text" id="inspector" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </label>
+                <label class="block">
+                    <span class="text-gray-700">Observaciones</span>
+                    <textarea id="observaciones" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </label>
+            </section>
+
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-bold hover:bg-blue-700 transition-colors">
+                Guardar Inspección
+            </button>
+        </form>
+
+        <!-- Cola de sincronización visual -->
+        <div id="sync-queue-status" class="mt-6 hidden">
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+                <p class="text-yellow-700 font-medium">Hay registros pendientes de sincronizar.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/database.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Registro del Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registrado'))
+                    .catch(err => console.log('Error SW', err));
+            });
+        }
+    </script>
+</body>
+</html>
