@@ -4,12 +4,12 @@
   "description": "App corporativa para el registro y control de inspección de baterías.",
   "icons": [
     {
-      "src": "./images/62900.png",
+      "src": "./images/battery-icon.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "./images/62900.png",
+      "src": "./images/battery-icon.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
