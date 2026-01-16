@@ -61,7 +61,7 @@
                 <div class="grid grid-cols-1 gap-4">
                     <label class="block">
                         <span class="text-gray-700">Referencia de batería *</span>
-                        <select id="refBateria" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                        <select id="refBateria" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                             <option value="244105472R">244105472R</option>
                             <option value="244103506R">244103506R</option>
                         </select>
@@ -73,15 +73,15 @@
             <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <label class="block">
                     <span class="text-gray-700">F. Inspección *</span>
-                    <input type="date" id="fechaInspeccion" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    <input type="date" id="fechaInspeccion" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                 </label>
                 <label class="block">
                     <span class="text-gray-700">F. Fabricación *</span>
-                    <input type="date" id="fechaFabricacion" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    <input type="date" id="fechaFabricacion" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                 </label>
                 <label class="block">
                     <span class="text-gray-700">F. Recarga *</span>
-                    <input type="date" id="fechaRecarga" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    <input type="date" id="fechaRecarga" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                 </label>
             </section>
 
@@ -91,35 +91,35 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <span class="text-gray-700">Bornes</span>
-                        <select id="bornes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <select id="bornes" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                             <option value="OK">OK</option>
                             <option value="NO OK">NO OK</option>
                         </select>
                     </div>
                     <div>
                         <span class="text-gray-700">Calcomanías</span>
-                        <select id="calcomanias" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <select id="calcomanias" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                             <option value="OK">OK</option>
                             <option value="NO OK">NO OK</option>
                         </select>
                     </div>
                     <div>
                         <span class="text-gray-700">Tapones</span>
-                        <select id="tapones" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <select id="tapones" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                             <option value="OK">OK</option>
                             <option value="NO OK">NO OK</option>
                         </select>
                     </div>
                     <div>
                         <span class="text-gray-700">Aspecto General</span>
-                        <select id="aspectoGeneral" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <select id="aspectoGeneral" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                             <option value="OK" selected>OK</option>
                             <option value="NO OK">NO OK</option>
                         </select>
                     </div>
                     <div class="col-span-2">
                         <span class="text-gray-700">Presenta Fugas</span>
-                        <select id="fugas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <select id="fugas" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                             <option value="NO">NO</option>
                             <option value="SÍ">SÍ</option>
                         </select>
@@ -133,19 +133,19 @@
                 <div class="grid grid-cols-2 gap-4">
                     <label class="block">
                         <span class="text-gray-700">Carga (V) *</span>
-                        <input type="number" step="0.01" id="carga" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="number" step="0.01" id="carga" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Peso (kg) *</span>
-                        <input type="number" step="0.01" id="peso" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="number" step="0.01" id="peso" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Fórmula *</span>
-                        <input type="number" id="formula" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="number" id="formula" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Días (0-21) *</span>
-                        <input type="number" id="dias" min="0" max="21" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="number" id="dias" min="0" max="21" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                     </label>
                 </div>
             </section>
@@ -154,11 +154,11 @@
             <section class="space-y-4">
                 <label class="block">
                     <span class="text-gray-700">Inspector *</span>
-                    <input type="text" id="inspector" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <input type="text" id="inspector" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
                 </label>
                 <label class="block">
                     <span class="text-gray-700">Observaciones</span>
-                    <textarea id="observaciones" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                    <textarea id="observaciones" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"></textarea>
                 </label>
             </section>
 
