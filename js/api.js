@@ -11,11 +11,32 @@ async function sendToGoogleSheets(data) {
     // Verificar si el campo de días está en rojo (días >= 21)
     const diasAlerta = data.dias >= 21;
     
-    // Añadimos la API Key y el estado de alerta al objeto de datos antes de enviar
+    // Rangos de validación por referencia de batería
+    const pesoRanges = {
+        '244105506R': { min: 14.80, max: 16.10 },
+        '244103318R': { min: 16.55, max: 17.97 }
+    };
+    
+    const voltajeRanges = {
+        '244105506R': { min: 12.70, max: 12.95 },
+        '244103318R': { min: 12.70, max: 13.00 }
+    };
+    
+    // Verificar si el peso está fuera de rango
+    const pesoRange = pesoRanges[data.refBateria];
+    const pesoAlerta = pesoRange && (data.peso < pesoRange.min || data.peso > pesoRange.max);
+    
+    // Verificar si el voltaje está fuera de rango
+    const voltajeRange = voltajeRanges[data.refBateria];
+    const voltajeAlerta = voltajeRange && (data.carga < voltajeRange.min || data.carga > voltajeRange.max);
+    
+    // Añadimos la API Key y los estados de alerta al objeto de datos antes de enviar
     const payload = {
         ...data,
         apiKey: API_CONFIG.key,
-        diasAlerta: diasAlerta  // Enviar si días >= 21
+        diasAlerta: diasAlerta,      // Enviar si días >= 21
+        pesoAlerta: pesoAlerta,      // Enviar si peso fuera de rango
+        voltajeAlerta: voltajeAlerta // Enviar si voltaje fuera de rango
     };
 
     try {

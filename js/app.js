@@ -41,6 +41,12 @@ const pesoRanges = {
     '244103318R': { min: 16.55, max: 17.97, label: '16,55kg - 17,97kg' }
 };
 
+// Rango de voltaje válido por referencia de batería
+const voltajeRanges = {
+    '244105506R': { min: 12.70, max: 12.95, label: '12,70V - 12,95V' },
+    '244103318R': { min: 12.70, max: 13.00, label: '12,70V - 13,00V' }
+};
+
 // Función para validar el peso según la referencia de batería
 function validarPeso() {
     const refBateria = document.getElementById('refBateria').value;
@@ -61,13 +67,35 @@ function validarPeso() {
     }
 }
 
-// Agregar listeners a las fechas para calcular automáticamente
+// Función para validar el voltaje según la referencia de batería
+function validarVoltaje() {
+    const refBateria = document.getElementById('refBateria').value;
+    const cargaInput = document.getElementById('carga');
+    const carga = parseFloat(cargaInput.value);
+    
+    if (!carga || isNaN(carga)) {
+        cargaInput.classList.remove('bg-red-200', 'border-red-500');
+        return;
+    }
+    
+    const range = voltajeRanges[refBateria];
+    
+    if (range && (carga < range.min || carga > range.max)) {
+        cargaInput.classList.add('bg-red-200', 'border-red-500');
+    } else {
+        cargaInput.classList.remove('bg-red-200', 'border-red-500');
+    }
+}// Agregar listeners a las fechas para calcular automáticamente
 document.getElementById('fechaInspeccion').addEventListener('change', calcularDias);
 document.getElementById('fechaRecarga').addEventListener('change', calcularDias);
 
-// Agregar listeners para validar peso
-document.getElementById('refBateria').addEventListener('change', validarPeso);
+// Agregar listeners para validar peso y voltaje
+document.getElementById('refBateria').addEventListener('change', () => {
+    validarPeso();
+    validarVoltaje();
+});
 document.getElementById('peso').addEventListener('input', validarPeso);
+document.getElementById('carga').addEventListener('input', validarVoltaje);
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
