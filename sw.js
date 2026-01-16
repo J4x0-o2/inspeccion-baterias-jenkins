@@ -16,10 +16,26 @@ self.addEventListener('install', (e) => {
     );
 });
 
-// Estrategia: Network First, falling back to cache
-// Para que siempre intente traer la versión más nueva si hay red
+// Estrategia: Cache First, falling back to network
+// Sirve desde cache primero (offline-first), actualiza desde red en background
 self.addEventListener('fetch', (e) => {
     e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request))
+        caches.match(e.request).then(cached => {
+            // Retorna del cache si existe
+            if (cached) return cached;
+            
+            // Si no está en cache, intenta traer de la red
+            return fetch(e.request).then(response => {
+                // Cachear la respuesta para futuro uso offline
+                if (response.ok && e.request.method === 'GET') {
+                    const cache = caches.open(CACHE_NAME);
+                    cache.then(c => c.put(e.request, response.clone()));
+                }
+                return response;
+            }).catch(() => {
+                // Si falla la red y no hay cache, retorna error offline
+                return new Response('Offline - No hay conexión', { status: 503 });
+            });
+        })
     );
 });

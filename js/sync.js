@@ -1,3 +1,5 @@
+// Este archivo sincroniza automáticamente los datos locales con Google Sheets cuando hay conexión a internet.
+
 let isSyncing = false;
 
 async function syncData() {
@@ -26,8 +28,15 @@ async function syncData() {
     syncData();
 }
 
-// Escuchar cambios de conexión
+// Escuchar cambios de conexión - Sincronizar apenas hay internet
 window.addEventListener('online', syncData);
 
-// Intentar sincronizar cada 5 minutos por si acaso
+// Intentar sincronizar cada 5 minutos automáticamente
 setInterval(syncData, 5 * 60 * 1000);
+
+// Intentar sincronizar al cargar la página
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncData);
+} else {
+    syncData();
+}
