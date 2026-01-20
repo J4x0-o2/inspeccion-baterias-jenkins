@@ -46,9 +46,15 @@
     <nav class="bg-blue-600 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold">Registro de Baterías</h1>
-            <div id="status-indicator" class="flex items-center">
-                <span id="online-status" class="h-3 w-3 rounded-full bg-green-400 mr-2"></span>
-                <span id="status-text" class="text-sm">Online</span>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm">Registradas: <strong id="contador-display">0</strong></span>
+                    <button type="button" id="reset-contador" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold transition-colors">Reiniciar</button>
+                </div>
+                <div id="status-indicator" class="flex items-center">
+                    <span id="online-status" class="h-3 w-3 rounded-full bg-green-400 mr-2"></span>
+                    <span id="status-text" class="text-sm">Online</span>
+                </div>
             </div>
         </div>
     </nav>

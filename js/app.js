@@ -2,6 +2,52 @@
 
 const form = document.getElementById('battery-form');
 
+// ============ GESTIÓN DEL CONTADOR ============
+const CONTADOR_KEY = 'baterias_registradas_contador';
+
+// Función para obtener el contador actual
+function obtenerContador() {
+    const contador = localStorage.getItem(CONTADOR_KEY);
+    return contador ? parseInt(contador) : 0;
+}
+
+// Función para actualizar el contador en localStorage y en la UI
+function actualizarContador(nuevoValor) {
+    localStorage.setItem(CONTADOR_KEY, nuevoValor);
+    const display = document.getElementById('contador-display');
+    if (display) {
+        display.textContent = nuevoValor;
+    }
+}
+
+// Función para incrementar el contador
+function incrementarContador() {
+    const contador = obtenerContador();
+    actualizarContador(contador + 1);
+}
+
+// Función para reiniciar el contador
+function reiniciarContador() {
+    if (confirm('¿Estás seguro de que deseas reiniciar el contador? Se perderán los datos del contador actual.')) {
+        actualizarContador(0);
+    }
+}
+
+// Cargar el contador cuando se carga la página
+function cargarContador() {
+    const contador = obtenerContador();
+    const display = document.getElementById('contador-display');
+    if (display) {
+        display.textContent = contador;
+    }
+}
+
+// Agregar evento al botón de reinicio
+document.getElementById('reset-contador').addEventListener('click', reiniciarContador);
+
+// Cargar el contador al iniciar
+cargarContador();
+
 // Función para calcular días entre dos fechas
 function calcularDias() {
     const fechaInspeccion = document.getElementById('fechaInspeccion').value;
@@ -146,11 +192,14 @@ form.addEventListener('submit', async (e) => {
         // 2. Guardar en IndexedDB (Capa Local)
         await saveLocal(formData);
         
-        // 3. Feedback visual
+        // 3. Incrementar contador
+        incrementarContador();
+        
+        // 4. Feedback visual
         alert("REGISTRO GUARDADO LOCALMENTE");
         form.reset();
 
-        // 4. Intentar sincronizar ahora mismo
+        // 5. Intentar sincronizar ahora mismo
         if (typeof syncData === 'function') {
             syncData();
         }
