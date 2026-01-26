@@ -9,10 +9,10 @@
   status = 200
 
 [context.production]
-  environment = { NODE_VERSION = "18" }
+  environment = { NODE_VERSION = "18", GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyV5epXHNj8tG9CpUbvXHt8AeVRbepZcuCmeqbUn0AxDIJppvZyasqwR71nn6hXLs4D/exec" }
 
 [context.deploy-preview]
-  environment = { NODE_VERSION = "18" }
+  environment = { NODE_VERSION = "18", GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyV5epXHNj8tG9CpUbvXHt8AeVRbepZcuCmeqbUn0AxDIJppvZyasqwR71nn6hXLs4D/exec" }
 
 [context.branch-deploy]
-  environment = { NODE_VERSION = "18" }
+  environment = { NODE_VERSION = "18", GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyV5epXHNj8tG9CpUbvXHt8AeVRbepZcuCmeqbUn0AxDIJppvZyasqwR71nn6hXLs4D/exec" }
