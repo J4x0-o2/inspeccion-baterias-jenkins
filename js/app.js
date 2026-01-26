@@ -200,8 +200,8 @@ form.addEventListener('submit', async (e) => {
         form.reset();
 
         // 5. Intentar sincronizar ahora mismo
-        if (typeof syncData === 'function') {
-            syncData();
+        if (typeof syncManager !== 'undefined') {
+            syncManager.triggerSync();
         }
         
     } catch (err) {
@@ -226,10 +226,11 @@ function updateOnlineStatus() {
     if (navigator.onLine) {
         if(statusDot) statusDot.className = "h-2 w-2 rounded-full bg-green-600 mr-2";
         if(statusText) statusText.innerText = "Online";
-        if (typeof syncData === 'function') syncData();
+        if (typeof syncManager !== 'undefined') syncManager.triggerSync();
     } else {
         if(statusDot) statusDot.className = "h-2 w-2 rounded-full bg-red-600 mr-2";
         if(statusText) statusText.innerText = "Offline";
+        if (typeof syncManager !== 'undefined') syncManager.updateSyncStatus('offline');
     }
 }
 

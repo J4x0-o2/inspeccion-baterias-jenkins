@@ -1,4 +1,9 @@
-const CACHE_NAME = 'battery-app-v4';
+// ============================================
+// SERVICE WORKER - Control de caché y offline
+// ============================================
+// Implementa estrategia offline-first robusta
+
+const CACHE_NAME = 'battery-app-v5';
 const ASSETS = [
     './',
     './index.html',
@@ -6,30 +11,39 @@ const ASSETS = [
     './js/database.js',
     './js/sync.js',
     './js/api.js',
+    './js/config.js',
     './manifest.json',
     'https://cdn.tailwindcss.com'
 ];
 
-// Lista de URLs que deben cachearse por separado
 const EXTERNAL_URLS = ['https://cdn.tailwindcss.com'];
 
-// Instalación: Guardar archivos en caché
+// ============ INSTALACIÓN ============
 self.addEventListener('install', (e) => {
     e.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
-            // Cachear assets locales
-            const localAssets = ASSETS.filter(url => !EXTERNAL_URLS.includes(url));
-            await cache.addAll(localAssets);
+            console.log('[SW] Instalando y cacheando assets...');
             
-            // Cachear recursos externos (CDN) de forma segura
+            // Cachear assets locales primero
+            const localAssets = ASSETS.filter(url => !EXTERNAL_URLS.includes(url));
+            
+            try {
+                await cache.addAll(localAssets);
+                console.log('[SW] Assets locales cacheados');
+            } catch (error) {
+                console.warn('[SW] Error cacheando algunos assets:', error);
+            }
+
+            // Cachear recursos externos de forma segura
             for (const url of EXTERNAL_URLS) {
                 try {
                     const response = await fetch(url);
                     if (response.ok) {
                         await cache.put(url, response);
+                        console.log(`[SW] ${url} cacheado`);
                     }
                 } catch (error) {
-                    console.warn(`No se pudo cachear ${url}:`, error);
+                    console.warn(`[SW] No se pudo cachear ${url}:`, error);
                 }
             }
         })
@@ -37,45 +51,86 @@ self.addEventListener('install', (e) => {
     self.skipWaiting();
 });
 
-// Estrategia: Cache First para todo, Network First para APIs
-// Los archivos locales y CDN se sirven desde cache (offline-first)
-// Las peticiones a APIs intentan red primero
+// ============ ESTRATEGIA DE FETCH ============
 self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
-    
-    // Para peticiones a APIs (Google Sheets, etc): Network First
-    if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1' && 
-        !url.hostname.includes('script.google.com') === false) {
+    const isLocalRequest = url.origin === self.location.origin;
+
+    // 1. Para APIs externas: Network First (intentar red primero)
+    if (!isLocalRequest && (url.hostname.includes('script.google.com') || 
+        url.hostname.includes('googleapis.com') ||
+        url.hostname.includes('google.com'))) {
+        
         e.respondWith(
             fetch(e.request)
-                .catch(() => caches.match(e.request))
+                .then(response => {
+                    // Cachear respuestas exitosas de APIs
+                    if (response.ok && e.request.method === 'GET') {
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(e.request, response.clone());
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    // Si no hay conexión, intentar servir del caché
+                    return caches.match(e.request)
+                        .then(cached => cached || createOfflineResponse(e.request));
+                })
         );
         return;
     }
-    
-    // Para todo lo demás: Cache First (archivos locales + CDN)
+
+    // 2. Para archivos locales: Cache First (servir del caché primero)
+    if (isLocalRequest) {
+        e.respondWith(
+            caches.match(e.request)
+                .then(cached => {
+                    if (cached) return cached;
+
+                    return fetch(e.request).then(response => {
+                        // Cachear respuestas exitosas
+                        if (response.ok && e.request.method === 'GET') {
+                            caches.open(CACHE_NAME).then(cache => {
+                                cache.put(e.request, response.clone());
+                            });
+                        }
+                        return response;
+                    }).catch(() => {
+                        return createOfflineResponse(e.request);
+                    });
+                })
+        );
+        return;
+    }
+
+    // 3. Para todo lo demás: Stale While Revalidate (servir del caché pero revalidar en background)
     e.respondWith(
-        caches.match(e.request).then(cached => {
-            if (cached) return cached;
-            
-            return fetch(e.request).then(response => {
-                if (response.ok && e.request.method === 'GET') {
-                    caches.open(CACHE_NAME).then(c => c.put(e.request, response.clone()));
-                }
-                return response;
-            }).catch(() => {
-                return new Response('Offline - No hay conexión', { status: 503 });
-            });
-        })
+        caches.match(e.request)
+            .then(cached => {
+                const fetchPromise = fetch(e.request).then(response => {
+                    if (response.ok && e.request.method === 'GET') {
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(e.request, response.clone());
+                        });
+                    }
+                    return response;
+                }).catch(() => null);
+
+                return cached || fetchPromise || createOfflineResponse(e.request);
+            })
     );
 });
 
+// ============ ACTIVACIÓN ============
 self.addEventListener('activate', (e) => {
+    console.log('[SW] Activando y limpiando cachés antiguos...');
     e.waitUntil(
         caches.keys().then(keys => {
             return Promise.all(
                 keys.map(key => {
                     if (key !== CACHE_NAME) {
+                        console.log(`[SW] Eliminando caché antiguo: ${key}`);
                         return caches.delete(key);
                     }
                 })
@@ -84,3 +139,40 @@ self.addEventListener('activate', (e) => {
     );
     self.clients.claim();
 });
+
+// ============ UTILIDADES ============
+
+/**
+ * Crea una respuesta offline genérica o específica según el tipo de request
+ */
+function createOfflineResponse(request) {
+    // Para solicitudes de documentos HTML
+    if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+        return caches.match('./index.html')
+            .then(response => response || new Response(
+                '<h1>Aplicación Offline</h1><p>No hay conexión a internet</p>',
+                { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }
+            ));
+    }
+
+    // Para solicitudes de API/JSON
+    if (request.headers.get('accept')?.includes('application/json')) {
+        return new Response(
+            JSON.stringify({ offline: true, message: 'Sin conexión' }),
+            { headers: { 'Content-Type': 'application/json' }, status: 503 }
+        );
+    }
+
+    return new Response('Offline', { status: 503 });
+}
+
+/**
+ * Comunica cambios a todos los clientes
+ */
+function notifyClients(message) {
+    self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+            client.postMessage(message);
+        });
+    });
+}
