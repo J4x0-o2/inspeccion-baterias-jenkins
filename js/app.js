@@ -4,6 +4,8 @@ const form = document.getElementById('battery-form');
 
 // ============ GESTIÓN DEL CONTADOR ============
 const CONTADOR_KEY = 'baterias_registradas_contador';
+const ULTIMO_REINICIO_KEY = 'baterias_ultimo_reinicio';
+const HISTORIAL_CONTADORES_KEY = 'baterias_historial_contadores';
 
 // Función para obtener el contador actual
 function obtenerContador() {
@@ -26,15 +28,102 @@ function incrementarContador() {
     actualizarContador(contador + 1);
 }
 
-// Función para reiniciar el contador
+// Función para obtener la última fecha de reinicio
+function obtenerUltimoReinicio() {
+    const ultimo = localStorage.getItem(ULTIMO_REINICIO_KEY);
+    return ultimo ? new Date(ultimo) : null;
+}
+
+// Función para guardar historial de contadores reiniciados
+function guardarEnHistorial(contadorAnterior, fechaReinicio) {
+    let historial = [];
+    const historialStr = localStorage.getItem(HISTORIAL_CONTADORES_KEY);
+    
+    if (historialStr) {
+        try {
+            historial = JSON.parse(historialStr);
+        } catch (e) {
+            historial = [];
+        }
+    }
+    
+    historial.push({
+        contador: contadorAnterior,
+        fecha: fechaReinicio,
+        timestamp: new Date(fechaReinicio).getTime()
+    });
+    
+    localStorage.setItem(HISTORIAL_CONTADORES_KEY, JSON.stringify(historial));
+}
+
+// Función para reiniciar el contador automáticamente
+function reiniciarContadorAutomatico() {
+    const contadorActual = obtenerContador();
+    const ahora = new Date().toISOString();
+    
+    // Guardar en historial el contador anterior
+    guardarEnHistorial(contadorActual, ahora);
+    
+    // Reiniciar a 0
+    actualizarContador(0);
+    
+    // Guardar la fecha del reinicio
+    localStorage.setItem(ULTIMO_REINICIO_KEY, ahora);
+    
+    // Mostrar notificación
+    mostrarNotificacion('Contador reiniciado automáticamente (24h)');
+    
+    console.log(`[Auto-Reinicio] Contador anterior: ${contadorActual}, Nuevo contador: 0`);
+}
+
+// Función para verificar y reiniciar si pasaron 24 horas
+function verificarReinicioAutomatico() {
+    const ultimoReinicio = obtenerUltimoReinicio();
+    const ahora = new Date();
+    
+    // Si no hay registro anterior, guardar hoy como primer reinicio
+    if (!ultimoReinicio) {
+        localStorage.setItem(ULTIMO_REINICIO_KEY, ahora.toISOString());
+        return;
+    }
+    
+    // Calcular diferencia en milisegundos
+    const diferencia = ahora - ultimoReinicio;
+    const veinticuatroHoras = 24 * 60 * 60 * 1000; // 86,400,000 ms
+    
+    // Si pasaron 24h o más, reiniciar
+    if (diferencia >= veinticuatroHoras) {
+        reiniciarContadorAutomatico();
+    }
+}
+
+// Función para mostrar notificación silenciosa
+function mostrarNotificacion(mensaje) {
+    // Crear elemento de notificación
+    const notificacion = document.createElement('div');
+    notificacion.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg shadow-lg z-[9999] animate-pulse';
+    notificacion.textContent = mensaje;
+    document.body.appendChild(notificacion);
+    
+    // Remover después de 4 segundos
+    setTimeout(() => {
+        notificacion.remove();
+    }, 4000);
+}
+
+// Función para reiniciar el contador manualmente (solo si el usuario lo solicita)
 function reiniciarContador() {
     if (confirm('¿Estás seguro de que deseas reiniciar el contador? Se perderán los datos del contador actual.')) {
-        actualizarContador(0);
+        reiniciarContadorAutomatico();
     }
 }
 
 // Cargar el contador cuando se carga la página
 function cargarContador() {
+    // Primero verificar si necesita reinicio automático
+    verificarReinicioAutomatico();
+    
+    // Luego cargar el contador actual
     const contador = obtenerContador();
     const display = document.getElementById('contador-display');
     if (display) {
