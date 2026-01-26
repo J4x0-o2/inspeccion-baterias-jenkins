@@ -137,6 +137,78 @@ document.getElementById('reset-contador').addEventListener('click', reiniciarCon
 // Cargar el contador al iniciar
 cargarContador();
 
+// ============ CARGAR REFERENCIAS DINÁMICAMENTE ==========
+
+async function cargarReferenciasDelServer() {
+    try {
+        const response = await fetch('/.netlify/functions/referencias', {
+            method: 'GET'
+        });
+        
+        if (!response.ok) throw new Error('Error al obtener referencias');
+        
+        const data = await response.json();
+        const referencias = data.referencias || [];
+        
+        // Guardar en localStorage
+        if (referencias.length > 0) {
+            localStorage.setItem('baterias_referencias_admin', JSON.stringify(referencias));
+            cargarOpcionesReferencias(referencias);
+        }
+    } catch (error) {
+        console.warn('⚠️ No se pudo cargar referencias del servidor:', error.message);
+        // Usar referencias locales
+        cargarReferenciasLocales();
+    }
+}
+
+function cargarReferenciasLocales() {
+    try {
+        const referenciasStr = localStorage.getItem('baterias_referencias_admin');
+        if (referenciasStr) {
+            const referencias = JSON.parse(referenciasStr);
+            cargarOpcionesReferencias(referencias);
+        } else {
+            // Cargar referencias por defecto
+            cargarReferenciasDefecto();
+        }
+    } catch (error) {
+        cargarReferenciasDefecto();
+    }
+}
+
+function cargarOpcionesReferencias(referencias) {
+    const select = document.getElementById('refBateria');
+    
+    // Mantener la opción placeholder
+    const placeholder = select.firstChild;
+    
+    // Limpiar opciones antiguas
+    while (select.children.length > 1) {
+        select.removeChild(select.lastChild);
+    }
+    
+    // Agregar nuevas opciones
+    referencias.forEach(ref => {
+        const option = document.createElement('option');
+        option.value = ref.referencia || ref.id;
+        option.textContent = ref.referencia || ref.id;
+        select.appendChild(option);
+    });
+}
+
+function cargarReferenciasDefecto() {
+    // Mantener las referencias hardcodeadas por defecto
+    // (ya están en el HTML)
+}
+
+// Cargar referencias cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', cargarReferenciasDelServer);
+} else {
+    cargarReferenciasDelServer();
+}
+
 // Función para calcular días entre dos fechas
 function calcularDias() {
     const fechaInspeccion = document.getElementById('fechaInspeccion').value;
