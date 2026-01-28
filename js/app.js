@@ -192,10 +192,13 @@ const voltajeRanges = {
 function validarCargaDinamica() {
     const refBateria = document.getElementById('refBateria').value;
     const cargaInput = document.getElementById('carga');
+    const cargaAlert = document.getElementById('carga-alert');
+    const cargaAlertText = document.getElementById('carga-alert-text');
     const carga = parseFloat(cargaInput.value);
     
     if (!carga || isNaN(carga)) {
         cargaInput.classList.remove('bg-red-200', 'border-red-500');
+        cargaAlert.classList.add('hidden');
         return;
     }
     
@@ -208,17 +211,23 @@ function validarCargaDinamica() {
         
         if (carga < min || carga > max) {
             cargaInput.classList.add('bg-red-200', 'border-red-500');
+            cargaAlertText.textContent = `Mínimo: ${min}V | Máximo: ${max}V | Actual: ${carga}V`;
+            cargaAlert.classList.remove('hidden');
             console.log(`⚠️ Carga fuera de rango: ${carga}V (válido: ${min}V - ${max}V)`);
         } else {
             cargaInput.classList.remove('bg-red-200', 'border-red-500');
+            cargaAlert.classList.add('hidden');
         }
     } else {
         // Si no hay rangos en Sheets, usar los hardcodeados (fallback)
         const range = voltajeRanges[refBateria];
         if (range && (carga < range.min || carga > range.max)) {
             cargaInput.classList.add('bg-red-200', 'border-red-500');
+            cargaAlertText.textContent = `Rango: ${range.label} | Actual: ${carga}V`;
+            cargaAlert.classList.remove('hidden');
         } else {
             cargaInput.classList.remove('bg-red-200', 'border-red-500');
+            cargaAlert.classList.add('hidden');
         }
     }
 }
@@ -226,10 +235,13 @@ function validarCargaDinamica() {
 function validarPesoDinamica() {
     const refBateria = document.getElementById('refBateria').value;
     const pesoInput = document.getElementById('peso');
+    const pesoAlert = document.getElementById('peso-alert');
+    const pesoAlertText = document.getElementById('peso-alert-text');
     const peso = parseFloat(pesoInput.value);
     
     if (!peso || isNaN(peso)) {
         pesoInput.classList.remove('bg-red-200', 'border-red-500');
+        pesoAlert.classList.add('hidden');
         return;
     }
     
@@ -242,17 +254,23 @@ function validarPesoDinamica() {
         
         if (peso < min || peso > max) {
             pesoInput.classList.add('bg-red-200', 'border-red-500');
+            pesoAlertText.textContent = `Mínimo: ${min}kg | Máximo: ${max}kg | Actual: ${peso}kg`;
+            pesoAlert.classList.remove('hidden');
             console.log(`⚠️ Peso fuera de rango: ${peso}kg (válido: ${min}kg - ${max}kg)`);
         } else {
             pesoInput.classList.remove('bg-red-200', 'border-red-500');
+            pesoAlert.classList.add('hidden');
         }
     } else {
         // Si no hay rangos en Sheets, usar los hardcodeados (fallback)
         const range = pesoRanges[refBateria];
         if (range && (peso < range.min || peso > range.max)) {
             pesoInput.classList.add('bg-red-200', 'border-red-500');
+            pesoAlertText.textContent = `Rango: ${range.label} | Actual: ${peso}kg`;
+            pesoAlert.classList.remove('hidden');
         } else {
             pesoInput.classList.remove('bg-red-200', 'border-red-500');
+            pesoAlert.classList.add('hidden');
         }
     }
 }
@@ -391,11 +409,19 @@ form.addEventListener('submit', async (e) => {
         // 3. Incrementar contador
         incrementarContador();
         
-        // 4. Feedback visual
+        // 4. Mostrar registros pendientes
+        const pendientes = await getAllPending();
+        if (pendientes && pendientes.length > 0) {
+            if (typeof syncManager !== 'undefined') {
+                syncManager.showSyncQueue(pendientes.length);
+            }
+        }
+        
+        // 5. Feedback visual
         alert("✅ REGISTRO GUARDADO LOCALMENTE");
         form.reset();
 
-        // 5. Intentar sincronizar ahora mismo
+        // 6. Intentar sincronizar ahora mismo
         if (typeof syncManager !== 'undefined') {
             syncManager.triggerSync();
         }

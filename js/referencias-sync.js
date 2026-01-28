@@ -1,19 +1,20 @@
 /**
- * SINCRONIZADOR DE REFERENCIAS DESDE GOOGLE SHEETS
- * Lee referencias con rangos de carga y peso
- * Actualiza validaciones del formulario dinámicamente
+ * SINCRONIZADOR DE REFERENCIAS (SIMPLIFICADO)
+ * Carga referencias del endpoint /api/referencias (hardcodeadas)
+ * Las almacena en localStorage para uso offline
  */
 
 const REFERENCIAS_STORAGE_KEY = 'baterias_referencias_cache';
-const REFERENCIAS_TIMESTAMP_KEY = 'baterias_referencias_timestamp';
-const SYNC_INTERVAL = 60 * 60 * 1000; // 1 hora
 
-// ========== FUNCIONES DE ALMACENAMIENTO ==========
+// ========== ALMACENAMIENTO EN CACHE ==========
 
 function guardarReferenciasEnCache(referencias) {
-  localStorage.setItem(REFERENCIAS_STORAGE_KEY, JSON.stringify(referencias));
-  localStorage.setItem(REFERENCIAS_TIMESTAMP_KEY, new Date().getTime().toString());
-  console.log(`💾 [Referencias] Cacheadas: ${referencias.length}`);
+  try {
+    localStorage.setItem(REFERENCIAS_STORAGE_KEY, JSON.stringify(referencias));
+    console.log(`✅ [Referencias] ${referencias.length} guardadas en caché`);
+  } catch (e) {
+    console.error('❌ Error guardando referencias en localStorage:', e);
+  }
 }
 
 function obtenerReferenciasDelCache() {
@@ -26,25 +27,22 @@ function obtenerReferenciasDelCache() {
   }
 }
 
-// ========== OBTENER REFERENCIA PARA VALIDAR ==========
+// ========== OBTENER REFERENCIA ESPECÍFICA ==========
 
 function obtenerReferencia(codigo) {
   const cached = obtenerReferenciasDelCache();
   return cached.find(r => r.referencia === codigo);
 }
 
-// ========== SINCRONIZACIÓN CON GOOGLE SHEETS ==========
+// ========== CARGAR REFERENCIAS ==========
 
-async function sincronizarReferenciasDesdeSheets() {
+async function cargarReferencias() {
   try {
-    console.log('[📡 Referencias] Obteniendo de Google Sheets...');
+    console.log('[📡] Cargando referencias...');
     
     const response = await fetch('/api/referencias', {
       method: 'GET',
-      cache: 'no-cache',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
+      headers: { 'Accept': 'application/json' }
     });
 
     if (!response.ok) {
@@ -54,38 +52,31 @@ async function sincronizarReferenciasDesdeSheets() {
     const data = await response.json();
     const referencias = data.referencias || [];
 
-    // Validar que tengamos referencias válidas
     if (Array.isArray(referencias) && referencias.length > 0) {
       guardarReferenciasEnCache(referencias);
       actualizarSelectReferencias(referencias);
-      console.log(`✅ [Referencias] ${referencias.length} sincronizadas`);
+      console.log(`✅ [Referencias] ${referencias.length} cargadas`);
       return referencias;
     } else {
-      console.warn('⚠️ [Referencias] No hay referencias en Google Sheets');
-      // Intentar con cache
-      const cached = obtenerReferenciasDelCache();
-      if (cached.length > 0) {
-        console.log(`📱 [Referencias] Usando ${cached.length} referencias cacheadas`);
-        actualizarSelectReferencias(cached);
-        return cached;
-      }
-      return [];
+      throw new Error('Sin referencias en respuesta');
     }
   } catch (error) {
-    console.warn('⚠️ [Referencias] Error al sincronizar:', error.message);
-    // Retornar referencias cacheadas como fallback
+    console.warn(`⚠️ [Referencias] Error: ${error.message}`);
+    
+    // Fallback: usar caché local
     const cached = obtenerReferenciasDelCache();
     if (cached.length > 0) {
-      console.log(`📱 [Referencias] Usando ${cached.length} referencias del cache local`);
+      console.log(`✅ [Referencias] ${cached.length} cargadas del caché (FALLBACK)`);
       actualizarSelectReferencias(cached);
+      return cached;
     } else {
-      console.error('❌ [Referencias] No hay referencias disponibles (sin cache)');
+      console.error('❌ [Referencias] Sin referencias disponibles');
+      return [];
     }
-    return cached;
   }
 }
 
-// ========== ACTUALIZAR SELECT DE REFERENCIAS ==========
+// ========== ACTUALIZAR DROPDOWN ==========
 
 function actualizarSelectReferencias(referencias) {
   const select = document.getElementById('refBateria');
@@ -94,32 +85,23 @@ function actualizarSelectReferencias(referencias) {
     return;
   }
 
-  // Obtener el valor actual seleccionado
-  const valorActual = select.value;
-
-  // Mantener el placeholder
-  const placeholder = select.options[0];
-  
-  // Limpiar opciones (excepto placeholder)
+  // Limpiar opciones
   while (select.options.length > 1) {
     select.remove(1);
   }
 
-  // Cambiar placeholder según disponibilidad
   if (referencias.length === 0) {
-    placeholder.text = '-- Sin referencias disponibles --';
-  } else {
-    placeholder.text = '-- Seleccionar referencia --';
+    select.options[0].text = '-- Sin referencias disponibles --';
+    return;
   }
 
-  // Agregar nuevas opciones
+  select.options[0].text = '-- Seleccionar referencia --';
+
+  // Agregar referencias
   referencias.forEach(ref => {
-    const valor = ref.referencia;
-    const label = `${valor}`;
-    
     const option = document.createElement('option');
-    option.value = valor;
-    option.text = label;
+    option.value = ref.referencia;
+    option.text = ref.referencia;
     option.dataset.cargaMin = ref.cargaMin || '';
     option.dataset.cargaMax = ref.cargaMax || '';
     option.dataset.pesoMin = ref.pesoMin || '';
@@ -127,57 +109,24 @@ function actualizarSelectReferencias(referencias) {
     select.appendChild(option);
   });
 
-  // Restaurar valor anterior si aún existe
-  if (valorActual) {
-    const existe = select.querySelector(`option[value="${valorActual}"]`);
-    if (existe) {
-      select.value = valorActual;
+  // ========== EVENT LISTENER PARA VALIDACIÓN DINÁMICA ==========
+  // Cuando cambia la referencia, revalidar carga y peso
+  select.addEventListener('change', () => {
+    if (typeof validarCargaDinamica === 'function') {
+      validarCargaDinamica();
     }
-  }
-
-  console.log(`✅ [Referencias] Select actualizado: ${referencias.length} referencias`);
+    if (typeof validarPesoDinamica === 'function') {
+      validarPesoDinamica();
+    }
+  });
 }
 
-// ========== CARGAR REFERENCIAS AL INICIAR ==========
-
-async function inicializarReferencias() {
-  console.log('[🚀 Referencias] Inicializando...');
-  
-  // Primero cargar del cache para UX rápida
-  const cached = obtenerReferenciasDelCache();
-  if (cached.length > 0) {
-    console.log(`📱 [Referencias] Mostrando ${cached.length} referencias del cache`);
-    actualizarSelectReferencias(cached);
-  }
-  
-  // Luego sincronizar con Google Sheets (actualiza si hay cambios)
-  const referencias = await sincronizarReferenciasDesdeSheets();
-  
-  if (referencias.length === 0 && cached.length === 0) {
-    console.warn('⚠️ [Referencias] No hay referencias disponibles');
-  }
-}
-
-// ========== SINCRONIZACIÓN AUTOMÁTICA PERIÓDICA ==========
-
-function iniciarSincronizacionPeriodica() {
-  // Sincronizar cada hora
-  setInterval(async () => {
-    console.log('[⏰ Referencias] Verificando cambios...');
-    await sincronizarReferenciasDesdeSheets();
-  }, SYNC_INTERVAL);
-  
-  console.log(`✅ [Referencias] Sincronización automática activada (cada 60 min)`);
-}
-
-// ========== INICIAR TODO AL CARGAR ==========
+// ========== INICIALIZAR AL CARGAR ==========
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    inicializarReferencias();
-    iniciarSincronizacionPeriodica();
+    cargarReferencias();
   });
 } else {
-  inicializarReferencias();
-  iniciarSincronizacionPeriodica();
+  cargarReferencias();
 }

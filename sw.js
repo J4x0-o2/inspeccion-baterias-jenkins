@@ -5,14 +5,14 @@
 
 const CACHE_NAME = 'battery-app-v5';
 const ASSETS = [
-    './',
-    './index.html',
-    './js/app.js',
-    './js/database.js',
-    './js/sync.js',
-    './js/api.js',
-    './js/config.js',
-    './manifest.json',
+    '/',
+    '/index.html',
+    '/js/app.js',
+    '/js/database.js',
+    '/js/sync.js',
+    '/js/api.js',
+    '/js/config.js',
+    '/manifest.json',
     'https://cdn.tailwindcss.com'
 ];
 
@@ -56,6 +56,49 @@ self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
     const isLocalRequest = url.origin === self.location.origin;
 
+    // 0. Para API de referencias: Network First con caché persistente
+    if (isLocalRequest && url.pathname === '/api/referencias') {
+        e.respondWith(
+            fetch(e.request)
+                .then(response => {
+                    // Clonar ANTES de consumir
+                    if (response.ok) {
+                        const responseClone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(e.request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    // Sin conexión → servir del caché
+                    console.log('[SW] Sin conexión para referencias - buscando en caché...');
+                    return caches.match(e.request)
+                        .then(cached => {
+                            if (cached) {
+                                console.log('[SW] ✅ Referencias cacheadas encontradas (OFFLINE)');
+                                return cached;
+                            }
+                            // Si no hay caché → respuesta vacía pero válida
+                            console.log('[SW] ❌ Sin caché de referencias disponible');
+                            return new Response(
+                                JSON.stringify({ 
+                                    ok: true,
+                                    referencias: [], 
+                                    offline: true,
+                                    source: 'offline-no-cache'
+                                }),
+                                { 
+                                    headers: { 'Content-Type': 'application/json' },
+                                    status: 200
+                                }
+                            );
+                        });
+                })
+        );
+        return;
+    }
+
     // 1. Para APIs externas: Network First (intentar red primero)
     if (!isLocalRequest && (url.hostname.includes('script.google.com') || 
         url.hostname.includes('googleapis.com') ||
@@ -64,10 +107,11 @@ self.addEventListener('fetch', (e) => {
         e.respondWith(
             fetch(e.request)
                 .then(response => {
-                    // Cachear respuestas exitosas de APIs
+                    // Clonar ANTES de consumir
                     if (response.ok && e.request.method === 'GET') {
+                        const responseClone = response.clone();
                         caches.open(CACHE_NAME).then(cache => {
-                            cache.put(e.request, response.clone());
+                            cache.put(e.request, responseClone);
                         });
                     }
                     return response;
@@ -89,10 +133,11 @@ self.addEventListener('fetch', (e) => {
                     if (cached) return cached;
 
                     return fetch(e.request).then(response => {
-                        // Cachear respuestas exitosas
+                        // Clonar ANTES de consumir
                         if (response.ok && e.request.method === 'GET') {
+                            const responseClone = response.clone();
                             caches.open(CACHE_NAME).then(cache => {
-                                cache.put(e.request, response.clone());
+                                cache.put(e.request, responseClone);
                             });
                         }
                         return response;
@@ -110,8 +155,9 @@ self.addEventListener('fetch', (e) => {
             .then(cached => {
                 const fetchPromise = fetch(e.request).then(response => {
                     if (response.ok && e.request.method === 'GET') {
+                        const responseClone = response.clone();
                         caches.open(CACHE_NAME).then(cache => {
-                            cache.put(e.request, response.clone());
+                            cache.put(e.request, responseClone);
                         });
                     }
                     return response;
@@ -148,7 +194,7 @@ self.addEventListener('activate', (e) => {
 function createOfflineResponse(request) {
     // Para solicitudes de documentos HTML
     if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
-        return caches.match('./index.html')
+        return caches.match('/index.html')
             .then(response => response || new Response(
                 '<h1>Aplicación Offline</h1><p>No hay conexión a internet</p>',
                 { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }

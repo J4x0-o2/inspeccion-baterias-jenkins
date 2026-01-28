@@ -38,7 +38,7 @@
         <div class="relative">
             <div class="h-24 w-24 rounded-full border-t-4 border-blue-600 animate-spin"></div>
             <img src="https://cdn-icons-png.flaticon.com/512/62/62900.png" 
-                 class="absolute inset-0 m-auto h-10 w-10 object-contain" alt="Logo">
+                class="absolute inset-0 m-auto h-10 w-10 object-contain" alt="Logo">
         </div>
         <h1 class="mt-8 text-2xl font-bold tracking-widest uppercase animate-pulse text-blue-600">BATERÍAS</h1>
         <p class="mt-2 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Cargando Sistema...</p>
@@ -139,14 +139,26 @@
             <section>
                 <h2 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-700">3. Medidas Técnicas</h2>
                 <div class="grid grid-cols-2 gap-4">
-                    <label class="block">
-                        <span class="text-gray-700">Carga (V) *</span>
-                        <input type="number" step="0.001" id="carga" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
-                    </label>
-                    <label class="block">
-                        <span class="text-gray-700">Peso (kg) *</span>
-                        <input type="number" step="0.001" id="peso" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
-                    </label>
+                    <div>
+                        <label class="block">
+                            <span class="text-gray-700">Carga (V) *</span>
+                            <input type="number" step="0.001" id="carga" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                        </label>
+                        <div id="carga-alert" class="mt-2 hidden px-3 py-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                            <strong>⚠️ Fuera de rango</strong>
+                            <div id="carga-alert-text"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block">
+                            <span class="text-gray-700">Peso (kg) *</span>
+                            <input type="number" step="0.001" id="peso" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                        </label>
+                        <div id="peso-alert" class="mt-2 hidden px-3 py-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                            <strong>⚠️ Fuera de rango</strong>
+                            <div id="peso-alert-text"></div>
+                        </div>
+                    </div>
                     <label class="block">
                         <span class="text-gray-700">Fórmula *</span>
                         <input type="number" id="formula" required value="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
@@ -203,13 +215,21 @@
             }, 1500);
         });
 
-        // Registro del Service Worker
+        // Registro del Service Worker con mejor manejo de errores
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registrado'))
-                    .catch(err => console.log('Error SW', err));
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(reg => {
+                        console.log('[✓] Service Worker registrado correctamente');
+                        console.log('[✓] Scope:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.error('[✗] Error registrando Service Worker:', err);
+                        console.error('[✗] Detalles:', err.message);
+                    });
             });
+        } else {
+            console.warn('[⚠] Service Worker no soportado en este navegador');
         }
     </script>
 </body>
