@@ -1,6 +1,6 @@
 {
   "name": "inspeccion-baterias",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "PWA para inspección de baterías con sincronización en Google Sheets",
   "main": "index.html",
   "scripts": {
