@@ -1,6 +1,6 @@
 # ============================================
 # CD: Deployment automático a Vercel
-# Se ejecuta en: push a master/main
+# Se ejecuta en: push a master/main DESPUÉS de version-bump
 # ============================================
 
 name: 🚀 Deploy a Vercel
