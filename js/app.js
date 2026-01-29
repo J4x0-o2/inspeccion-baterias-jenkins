@@ -4,7 +4,6 @@ const form = document.getElementById('battery-form');
 
 // ============ GESTIÓN DEL CONTADOR ============
 const CONTADOR_KEY = 'baterias_registradas_contador';
-const ULTIMO_REINICIO_KEY = 'baterias_ultimo_reinicio';
 const HISTORIAL_CONTADORES_KEY = 'baterias_historial_contadores';
 
 // Función para obtener el contador actual
@@ -26,12 +25,6 @@ function actualizarContador(nuevoValor) {
 function incrementarContador() {
     const contador = obtenerContador();
     actualizarContador(contador + 1);
-}
-
-// Función para obtener la última fecha de reinicio
-function obtenerUltimoReinicio() {
-    const ultimo = localStorage.getItem(ULTIMO_REINICIO_KEY);
-    return ultimo ? new Date(ultimo) : null;
 }
 
 // Función para guardar historial de contadores reiniciados
@@ -67,34 +60,10 @@ function reiniciarContadorAutomatico() {
     // Reiniciar a 0
     actualizarContador(0);
     
-    // Guardar la fecha del reinicio
-    localStorage.setItem(ULTIMO_REINICIO_KEY, ahora);
-    
     // Mostrar notificación
-    mostrarNotificacion('Contador reiniciado automáticamente (24h)');
+    mostrarNotificacion('Contador reiniciado');
     
     console.log(`[Auto-Reinicio] Contador anterior: ${contadorActual}, Nuevo contador: 0`);
-}
-
-// Función para verificar y reiniciar si pasaron 24 horas
-function verificarReinicioAutomatico() {
-    const ultimoReinicio = obtenerUltimoReinicio();
-    const ahora = new Date();
-    
-    // Si no hay registro anterior, guardar hoy como primer reinicio
-    if (!ultimoReinicio) {
-        localStorage.setItem(ULTIMO_REINICIO_KEY, ahora.toISOString());
-        return;
-    }
-    
-    // Calcular diferencia en milisegundos
-    const diferencia = ahora - ultimoReinicio;
-    const veinticuatroHoras = 24 * 60 * 60 * 1000; // 86,400,000 ms
-    
-    // Si pasaron 24h o más, reiniciar
-    if (diferencia >= veinticuatroHoras) {
-        reiniciarContadorAutomatico();
-    }
 }
 
 // Función para mostrar notificación silenciosa
@@ -120,10 +89,6 @@ function reiniciarContador() {
 
 // Cargar el contador cuando se carga la página
 function cargarContador() {
-    // Primero verificar si necesita reinicio automático
-    verificarReinicioAutomatico();
-    
-    // Luego cargar el contador actual
     const contador = obtenerContador();
     const display = document.getElementById('contador-display');
     if (display) {
