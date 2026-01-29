@@ -650,12 +650,14 @@ function abrirModalConfigRef() {
     modal.classList.remove('hidden');
     // Llenar el select con las referencias disponibles
     const selectRef = document.getElementById('config-ref-select');
-    const referencias = obtenerTodasLasReferencias();
     
-    // Limpiar opciones previas
+    // Limpiar todas las opciones y optgroups previos
     while (selectRef.options.length > 1) {
       selectRef.remove(1);
     }
+    // Limpiar optgroups
+    const optgroups = selectRef.querySelectorAll('optgroup');
+    optgroups.forEach(og => og.remove());
     
     // Agregar referencias base
     const base = obtenerReferenciasDelCache();
@@ -670,11 +672,11 @@ function abrirModalConfigRef() {
       selectRef.appendChild(option);
     });
     
-    // Agregar separador si hay referencias personalizadas
+    // Agregar separador si hay referencias creadas
     const custom = obtenerReferenciasCustom();
     if (custom.length > 0) {
       const separator = document.createElement('optgroup');
-      separator.label = '─── Referencias Personalizadas ───';
+      separator.label = '─── Referencias Creadas ───';
       selectRef.appendChild(separator);
       
       custom.forEach(ref => {
@@ -838,13 +840,58 @@ function crearNuevaReferenciaConfig() {
   });
 
   if (resultado.ok) {
-    // Actualizar select
-    const todasLasRefs = obtenerTodasLasReferencias();
-    actualizarSelectReferencias(todasLasRefs);
+    // Actualizar el select sin usar actualizarSelectReferencias (evita listeners duplicados)
+    const selectRef = document.getElementById('config-ref-select');
+    
+    // Limpiar optgroups previos
+    const optgroups = selectRef.querySelectorAll('optgroup');
+    optgroups.forEach(og => og.remove());
+    
+    // Agregar nuevamente con las referencias actualizadas
+    const base = obtenerReferenciasDelCache();
+    base.forEach(ref => {
+      const option = document.createElement('option');
+      option.value = ref.referencia;
+      option.text = ref.referencia;
+      option.dataset.cargaMin = ref.cargaMin || '';
+      option.dataset.cargaMax = ref.cargaMax || '';
+      option.dataset.pesoMin = ref.pesoMin || '';
+      option.dataset.pesoMax = ref.pesoMax || '';
+      selectRef.appendChild(option);
+    });
+    
+    const custom = obtenerReferenciasCustom();
+    if (custom.length > 0) {
+      const separator = document.createElement('optgroup');
+      separator.label = '─── Referencias Creadas ───';
+      selectRef.appendChild(separator);
+      
+      custom.forEach(ref => {
+        const option = document.createElement('option');
+        option.value = ref.referencia;
+        option.text = `${ref.referencia} (*)`;
+        option.dataset.cargaMin = ref.cargaMin || '';
+        option.dataset.cargaMax = ref.cargaMax || '';
+        option.dataset.pesoMin = ref.pesoMin || '';
+        option.dataset.pesoMax = ref.pesoMax || '';
+        separator.appendChild(option);
+      });
+    }
     
     // Seleccionar la nueva referencia
-    document.getElementById('config-ref-select').value = codigo;
-    seleccionarReferenciaConfig();
+    selectRef.value = codigo;
+    
+    // Mostrar la sección de parámetros
+    const referencia = obtenerReferencia(codigo);
+    if (referencia) {
+      document.getElementById('config-carga-min').value = referencia.cargaMin || '';
+      document.getElementById('config-carga-max').value = referencia.cargaMax || '';
+      document.getElementById('config-peso-min').value = referencia.pesoMin || '';
+      document.getElementById('config-peso-max').value = referencia.pesoMax || '';
+      document.getElementById('config-params-section').classList.remove('hidden');
+      document.getElementById('config-ref-actual').classList.add('hidden');
+      document.getElementById('config-ref-confirmar').disabled = false;
+    }
     
     ocultarFormularioNuevaRefConfig();
     mostrarNotificacion(`✅ Referencia "${codigo}" creada`);

@@ -199,7 +199,7 @@ function actualizarSelectReferencias(referencias) {
   // Agregar separador si hay custom
   if (custom.length > 0) {
     const separator = document.createElement('optgroup');
-    separator.label = '─── Referencias Personalizadas ───';
+    separator.label = '─── Referencias Creadas ───';
     select.appendChild(separator);
 
     custom.forEach(ref => {
