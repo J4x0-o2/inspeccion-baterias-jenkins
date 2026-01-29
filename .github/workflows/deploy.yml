@@ -43,8 +43,8 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # Ejecutar deploy con token (Vercel detecta automáticamente el proyecto)
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+          # Ejecutar deploy con token y confirmación automática
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
       
       # Verificar que el deployment fue exitoso
       - name: ✅ Verificar deployment
