@@ -648,6 +648,47 @@ function abrirModalConfigRef() {
   const modal = document.getElementById('modal-config-ref');
   if (modal) {
     modal.classList.remove('hidden');
+    // Llenar el select con las referencias disponibles
+    const selectRef = document.getElementById('config-ref-select');
+    const referencias = obtenerTodasLasReferencias();
+    
+    // Limpiar opciones previas
+    while (selectRef.options.length > 1) {
+      selectRef.remove(1);
+    }
+    
+    // Agregar referencias base
+    const base = obtenerReferenciasDelCache();
+    base.forEach(ref => {
+      const option = document.createElement('option');
+      option.value = ref.referencia;
+      option.text = ref.referencia;
+      option.dataset.cargaMin = ref.cargaMin || '';
+      option.dataset.cargaMax = ref.cargaMax || '';
+      option.dataset.pesoMin = ref.pesoMin || '';
+      option.dataset.pesoMax = ref.pesoMax || '';
+      selectRef.appendChild(option);
+    });
+    
+    // Agregar separador si hay referencias personalizadas
+    const custom = obtenerReferenciasCustom();
+    if (custom.length > 0) {
+      const separator = document.createElement('optgroup');
+      separator.label = '─── Referencias Personalizadas ───';
+      selectRef.appendChild(separator);
+      
+      custom.forEach(ref => {
+        const option = document.createElement('option');
+        option.value = ref.referencia;
+        option.text = `${ref.referencia} (*)`;
+        option.dataset.cargaMin = ref.cargaMin || '';
+        option.dataset.cargaMax = ref.cargaMax || '';
+        option.dataset.pesoMin = ref.pesoMin || '';
+        option.dataset.pesoMax = ref.pesoMax || '';
+        separator.appendChild(option);
+      });
+    }
+    
     actualizarUIModalConfigRef();
   }
 }
