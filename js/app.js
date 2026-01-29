@@ -327,6 +327,14 @@ document.getElementById('peso').addEventListener('change', validarPesoDinamica);
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // VALIDACIÓN 0: Verificar que hay una referencia configurada
+    const configRef = obtenerConfigRef();
+    if (!configRef) {
+        alert("⚠️ DEBES CONFIGURAR UNA REFERENCIA DE BATERÍA PRIMERO\n\nHaz clic en el botón '⚙️ Referencia' en la barra superior.");
+        abrirModalConfigRef();
+        return;
+    }
+
     // Función auxiliar para obtener valores de forma segura
     const getValue = (id) => {
         const el = document.getElementById(id);
@@ -459,3 +467,499 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
+
+// ============ MODAL PARA AGREGAR NUEVAS REFERENCIAS ============
+
+function abrirModalNuevaRef() {
+  const modal = document.getElementById('modal-nueva-ref');
+  if (modal) {
+    modal.classList.remove('hidden');
+    document.getElementById('modal-ref-codigo')?.focus();
+  }
+}
+
+function cerrarModalNuevaRef() {
+  const modal = document.getElementById('modal-nueva-ref');
+  if (modal) {
+    modal.classList.add('hidden');
+    // Limpiar formulario
+    document.getElementById('modal-ref-codigo').value = '';
+    document.getElementById('modal-ref-carga-min').value = '';
+    document.getElementById('modal-ref-carga-max').value = '';
+    document.getElementById('modal-ref-peso-min').value = '';
+    document.getElementById('modal-ref-peso-max').value = '';
+    document.getElementById('modal-ref-error').classList.add('hidden');
+  }
+}
+
+function ocultarErrorModal() {
+  const error = document.getElementById('modal-ref-error');
+  if (error) {
+    error.classList.add('hidden');
+  }
+}
+
+function mostrarErrorModal(mensaje) {
+  const error = document.getElementById('modal-ref-error');
+  const errorMsg = document.getElementById('modal-ref-error-msg');
+  if (error && errorMsg) {
+    errorMsg.textContent = mensaje;
+    error.classList.remove('hidden');
+  }
+}
+
+function guardarNuevaRef() {
+  ocultarErrorModal();
+
+  const codigo = document.getElementById('modal-ref-codigo').value.trim().toUpperCase();
+  const cargaMin = parseFloat(document.getElementById('modal-ref-carga-min').value);
+  const cargaMax = parseFloat(document.getElementById('modal-ref-carga-max').value);
+  const pesoMin = parseFloat(document.getElementById('modal-ref-peso-min').value);
+  const pesoMax = parseFloat(document.getElementById('modal-ref-peso-max').value);
+
+  // Validaciones básicas
+  if (!codigo) {
+    mostrarErrorModal('El código de referencia es requerido');
+    return;
+  }
+
+  if (isNaN(cargaMin) || isNaN(cargaMax)) {
+    mostrarErrorModal('Los valores de carga deben ser números válidos');
+    return;
+  }
+
+  if (isNaN(pesoMin) || isNaN(pesoMax)) {
+    mostrarErrorModal('Los valores de peso deben ser números válidos');
+    return;
+  }
+
+  // Llamar a la función de referencias-sync.js
+  const resultado = agregarReferencia({
+    referencia: codigo,
+    cargaMin,
+    cargaMax,
+    pesoMin,
+    pesoMax
+  });
+
+  if (resultado.ok) {
+    mostrarNotificacion(`✅ Referencia "${codigo}" agregada correctamente`);
+    cerrarModalNuevaRef();
+  } else {
+    mostrarErrorModal(resultado.error || 'Error al agregar la referencia');
+  }
+}
+
+// Event Listeners para el modal
+document.addEventListener('DOMContentLoaded', () => {
+  // Botón para abrir modal
+  const btnAgregarRef = document.getElementById('btn-agregar-ref');
+  if (btnAgregarRef) {
+    btnAgregarRef.addEventListener('click', (e) => {
+      e.preventDefault();
+      abrirModalNuevaRef();
+    });
+  }
+
+  // Botones para cerrar modal
+  const botonesClose = document.querySelectorAll('.btn-close-modal');
+  botonesClose.forEach(btn => {
+    btn.addEventListener('click', cerrarModalNuevaRef);
+  });
+
+  // Botón guardar
+  const btnGuardar = document.getElementById('modal-ref-guardar');
+  if (btnGuardar) {
+    btnGuardar.addEventListener('click', guardarNuevaRef);
+  }
+
+  // Permitir Enter en los campos de input
+  const modalInputs = [
+    'modal-ref-codigo',
+    'modal-ref-carga-min',
+    'modal-ref-carga-max',
+    'modal-ref-peso-min',
+    'modal-ref-peso-max'
+  ];
+
+  modalInputs.forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          guardarNuevaRef();
+        }
+      });
+    }
+  });
+
+  // Cerrar modal al hacer click fuera
+  const modal = document.getElementById('modal-nueva-ref');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        cerrarModalNuevaRef();
+      }
+    });
+  }
+});
+
+// ============ GESTIÓN DE CONFIGURACIÓN DE REFERENCIA ============
+const CONFIG_REF_KEY = 'baterias_config_referencia_actual';
+
+// Estructura para almacenar la referencia configurada:
+// {
+//   codigo: "244105506R",
+//   cargaMin: 12.7,
+//   cargaMax: 12.95,
+//   pesoMin: 14.8,
+//   pesoMax: 16.1
+// }
+
+function guardarConfigRef(config) {
+  try {
+    localStorage.setItem(CONFIG_REF_KEY, JSON.stringify(config));
+    console.log(`✅ Configuración de referencia guardada: ${config.codigo}`);
+  } catch (e) {
+    console.error('❌ Error guardando configuración de referencia:', e);
+  }
+}
+
+function obtenerConfigRef() {
+  try {
+    const config = localStorage.getItem(CONFIG_REF_KEY);
+    return config ? JSON.parse(config) : null;
+  } catch (e) {
+    console.error('❌ Error obteniendo configuración de referencia:', e);
+    return null;
+  }
+}
+
+function limpiarConfigRef() {
+  try {
+    localStorage.removeItem(CONFIG_REF_KEY);
+    console.log('✅ Configuración de referencia limpiada');
+  } catch (e) {
+    console.error('❌ Error limpiando configuración de referencia:', e);
+  }
+}
+
+function abrirModalConfigRef() {
+  const modal = document.getElementById('modal-config-ref');
+  if (modal) {
+    modal.classList.remove('hidden');
+    actualizarUIModalConfigRef();
+  }
+}
+
+function cerrarModalConfigRef() {
+  const modal = document.getElementById('modal-config-ref');
+  if (modal) {
+    modal.classList.add('hidden');
+    ocultarErrorConfigRef();
+    ocultarFormularioNuevaRefConfig();
+  }
+}
+
+function ocultarErrorConfigRef() {
+  const error = document.getElementById('config-ref-error');
+  if (error) {
+    error.classList.add('hidden');
+  }
+}
+
+function mostrarErrorConfigRef(mensaje) {
+  const error = document.getElementById('config-ref-error');
+  const errorMsg = document.getElementById('config-ref-error-msg');
+  if (error && errorMsg) {
+    errorMsg.textContent = mensaje;
+    error.classList.remove('hidden');
+  }
+}
+
+function mostrarFormularioNuevaRefConfig() {
+  const form = document.getElementById('config-ref-nueva-form');
+  if (form) {
+    form.classList.remove('hidden');
+    document.getElementById('config-ref-codigo')?.focus();
+  }
+}
+
+function ocultarFormularioNuevaRefConfig() {
+  const form = document.getElementById('config-ref-nueva-form');
+  if (form) {
+    form.classList.add('hidden');
+    // Limpiar formulario
+    document.getElementById('config-ref-codigo').value = '';
+    document.getElementById('config-ref-carga-min-new').value = '';
+    document.getElementById('config-ref-carga-max-new').value = '';
+    document.getElementById('config-ref-peso-min-new').value = '';
+    document.getElementById('config-ref-peso-max-new').value = '';
+  }
+}
+
+function actualizarUIModalConfigRef() {
+  const config = obtenerConfigRef();
+  const selectRef = document.getElementById('config-ref-select');
+  const paramsSection = document.getElementById('config-params-section');
+  const actualSection = document.getElementById('config-ref-actual');
+  const btnConfirmar = document.getElementById('config-ref-confirmar');
+
+  if (config) {
+    // Mostrar sección de parámetros si hay configuración
+    paramsSection.classList.remove('hidden');
+    actualSection.classList.remove('hidden');
+    
+    // Llenar inputs con valores actuales
+    document.getElementById('config-carga-min').value = config.cargaMin;
+    document.getElementById('config-carga-max').value = config.cargaMax;
+    document.getElementById('config-peso-min').value = config.pesoMin;
+    document.getElementById('config-peso-max').value = config.pesoMax;
+    
+    // Mostrar referencia actual
+    document.getElementById('config-ref-actual-codigo').textContent = config.codigo;
+    document.getElementById('config-ref-actual-carga').textContent = `${config.cargaMin} - ${config.cargaMax}`;
+    document.getElementById('config-ref-actual-peso').textContent = `${config.pesoMin} - ${config.pesoMax}`;
+    
+    // Seleccionar en el dropdown
+    selectRef.value = config.codigo;
+    btnConfirmar.disabled = false;
+  } else {
+    paramsSection.classList.add('hidden');
+    actualSection.classList.add('hidden');
+    btnConfirmar.disabled = true;
+  }
+}
+
+function seleccionarReferenciaConfig() {
+  ocultarErrorConfigRef();
+  const selectRef = document.getElementById('config-ref-select');
+  const codigo = selectRef.value;
+
+  if (!codigo) {
+    mostrarErrorConfigRef('Debes seleccionar una referencia');
+    return;
+  }
+
+  // Obtener la referencia completa
+  const referencia = obtenerReferencia(codigo);
+  if (!referencia) {
+    mostrarErrorConfigRef('Referencia no encontrada');
+    return;
+  }
+
+  // Llenar inputs con los valores de la referencia
+  document.getElementById('config-carga-min').value = referencia.cargaMin || '';
+  document.getElementById('config-carga-max').value = referencia.cargaMax || '';
+  document.getElementById('config-peso-min').value = referencia.pesoMin || '';
+  document.getElementById('config-peso-max').value = referencia.pesoMax || '';
+
+  // Mostrar sección de parámetros
+  document.getElementById('config-params-section').classList.remove('hidden');
+  document.getElementById('config-ref-actual').classList.add('hidden');
+  document.getElementById('config-ref-confirmar').disabled = false;
+
+  ocultarFormularioNuevaRefConfig();
+}
+
+function crearNuevaReferenciaConfig() {
+  ocultarErrorConfigRef();
+
+  const codigo = document.getElementById('config-ref-codigo').value.trim().toUpperCase();
+  const cargaMin = parseFloat(document.getElementById('config-ref-carga-min-new').value);
+  const cargaMax = parseFloat(document.getElementById('config-ref-carga-max-new').value);
+  const pesoMin = parseFloat(document.getElementById('config-ref-peso-min-new').value);
+  const pesoMax = parseFloat(document.getElementById('config-ref-peso-max-new').value);
+
+  // Validaciones
+  if (!codigo) {
+    mostrarErrorConfigRef('El código de referencia es requerido');
+    return;
+  }
+
+  if (isNaN(cargaMin) || isNaN(cargaMax)) {
+    mostrarErrorConfigRef('Los valores de carga deben ser números válidos');
+    return;
+  }
+
+  if (isNaN(pesoMin) || isNaN(pesoMax)) {
+    mostrarErrorConfigRef('Los valores de peso deben ser números válidos');
+    return;
+  }
+
+  // Crear referencia usando la función de referencias-sync.js
+  const resultado = agregarReferencia({
+    referencia: codigo,
+    cargaMin,
+    cargaMax,
+    pesoMin,
+    pesoMax
+  });
+
+  if (resultado.ok) {
+    // Actualizar select
+    const todasLasRefs = obtenerTodasLasReferencias();
+    actualizarSelectReferencias(todasLasRefs);
+    
+    // Seleccionar la nueva referencia
+    document.getElementById('config-ref-select').value = codigo;
+    seleccionarReferenciaConfig();
+    
+    ocultarFormularioNuevaRefConfig();
+    mostrarNotificacion(`✅ Referencia "${codigo}" creada`);
+  } else {
+    mostrarErrorConfigRef(resultado.error || 'Error al crear la referencia');
+  }
+}
+
+function confirmarConfigRef() {
+  ocultarErrorConfigRef();
+
+  const selectRef = document.getElementById('config-ref-select');
+  const codigo = selectRef.value;
+
+  if (!codigo) {
+    mostrarErrorConfigRef('Debes seleccionar una referencia');
+    return;
+  }
+
+  const cargaMin = parseFloat(document.getElementById('config-carga-min').value);
+  const cargaMax = parseFloat(document.getElementById('config-carga-max').value);
+  const pesoMin = parseFloat(document.getElementById('config-peso-min').value);
+  const pesoMax = parseFloat(document.getElementById('config-peso-max').value);
+
+  // Validaciones
+  if (isNaN(cargaMin) || isNaN(cargaMax) || isNaN(pesoMin) || isNaN(pesoMax)) {
+    mostrarErrorConfigRef('Todos los parámetros deben ser números válidos');
+    return;
+  }
+
+  if (cargaMin >= cargaMax) {
+    mostrarErrorConfigRef('Carga mínima debe ser menor que máxima');
+    return;
+  }
+
+  if (pesoMin >= pesoMax) {
+    mostrarErrorConfigRef('Peso mínimo debe ser menor que máximo');
+    return;
+  }
+
+  // Guardar configuración
+  const config = {
+    codigo,
+    cargaMin,
+    cargaMax,
+    pesoMin,
+    pesoMax,
+    timestamp: new Date().toISOString()
+  };
+
+  guardarConfigRef(config);
+  
+  // Seleccionar automáticamente la referencia en el formulario
+  document.getElementById('refBateria').value = codigo;
+  
+  mostrarNotificacion(`✅ Referencia "${codigo}" configurada correctamente`);
+  cerrarModalConfigRef();
+  actualizarBotonesConfigRef();
+}
+
+function actualizarBotonesConfigRef() {
+  const config = obtenerConfigRef();
+  const btnConfig = document.getElementById('btn-config-ref');
+  
+  if (config) {
+    btnConfig.textContent = `⚙️ ${config.codigo}`;
+    btnConfig.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+    btnConfig.classList.add('bg-green-600', 'hover:bg-green-700');
+  } else {
+    btnConfig.textContent = '⚙️ Referencia';
+    btnConfig.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+    btnConfig.classList.remove('bg-green-600', 'hover:bg-green-700');
+  }
+}
+
+// Event Listeners para el modal de configuración de referencia
+document.addEventListener('DOMContentLoaded', () => {
+  // Botón para abrir modal de configuración
+  const btnConfigRef = document.getElementById('btn-config-ref');
+  if (btnConfigRef) {
+    btnConfigRef.addEventListener('click', (e) => {
+      e.preventDefault();
+      abrirModalConfigRef();
+    });
+  }
+
+  // Select de referencia en el modal
+  const selectRef = document.getElementById('config-ref-select');
+  if (selectRef) {
+    selectRef.addEventListener('change', seleccionarReferenciaConfig);
+  }
+
+  // Botón para mostrar formulario de nueva referencia
+  const btnNuevaRef = document.getElementById('config-ref-nuevo');
+  if (btnNuevaRef) {
+    btnNuevaRef.addEventListener('click', mostrarFormularioNuevaRefConfig);
+  }
+
+  // Botón para crear nueva referencia
+  const btnCrearRef = document.getElementById('config-ref-crear');
+  if (btnCrearRef) {
+    btnCrearRef.addEventListener('click', crearNuevaReferenciaConfig);
+  }
+
+  // Permitir Enter en campos de nueva referencia
+  const newRefInputs = [
+    'config-ref-codigo',
+    'config-ref-carga-min-new',
+    'config-ref-carga-max-new',
+    'config-ref-peso-min-new',
+    'config-ref-peso-max-new'
+  ];
+
+  newRefInputs.forEach(id => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          crearNuevaReferenciaConfig();
+        }
+      });
+    }
+  });
+
+  // Botón confirmar
+  const btnConfirmar = document.getElementById('config-ref-confirmar');
+  if (btnConfirmar) {
+    btnConfirmar.addEventListener('click', confirmarConfigRef);
+  }
+
+  // Botón cancelar
+  const btnCancelar = document.getElementById('config-ref-cancelar');
+  if (btnCancelar) {
+    btnCancelar.addEventListener('click', cerrarModalConfigRef);
+  }
+
+  // Cerrar modal al hacer click fuera
+  const modal = document.getElementById('modal-config-ref');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        cerrarModalConfigRef();
+      }
+    });
+  }
+
+  // Actualizar botón de referencia actual
+  actualizarBotonesConfigRef();
+});
+
+// Mostrar modal de configuración si no hay referencia configurada al cargar la página
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const config = obtenerConfigRef();
+    if (!config) {
+      abrirModalConfigRef();
+    }
+  }, 2000); // Esperar 2 segundos después de cargar todas las referencias
+});
