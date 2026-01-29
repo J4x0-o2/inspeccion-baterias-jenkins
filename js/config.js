@@ -1,10 +1,11 @@
 // ============================================
 // CONFIGURACIÓN GENERAL DE LA APP
 // ============================================
-// Credenciales sensibles se obtienen desde variables de entorno (Vercel)
-// Las referencias base se definen aquí para uso offline
+// ⚠️ IMPORTANTE: Este archivo se sirve al navegador
+// NO incluir credenciales, tokens o datos sensibles aquí
+// Las credenciales están en Vercel como Environment Variables
 
-// REFERENCIAS BASE (HARDCODEADAS)
+// REFERENCIAS BASE (PÚBLICAS - Info. general de baterías)
 const REFERENCIAS_BASE = [
   {
     id: "1",
@@ -24,23 +25,9 @@ const REFERENCIAS_BASE = [
   }
 ];
 
-// CREDENCIALES: Se obtienen desde variables de entorno (Vercel)
-// En desarrollo local, usar .env.local o similar
-// En producción (Vercel), están configuradas en Settings > Environment Variables
-const API_ENDPOINTS = {
-    googleSheets: {
-        url: process.env.GOOGLE_SHEETS_URL || "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
-        key: process.env.GOOGLE_SHEETS_KEY || "YOUR_KEY"
-    }
-};
-
 // Función para obtener referencias base
 function getReferenciasBase() {
     return REFERENCIAS_BASE;
 }
 
-// Función para obtener configuración de forma segura (solo desde sync.js)
-function getAPIConfig() {
-    return API_ENDPOINTS.googleSheets;
-}
 
