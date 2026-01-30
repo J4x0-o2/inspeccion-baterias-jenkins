@@ -155,5 +155,5 @@ jobs:
           echo ""
           echo "🏷️ Tags creados y pusheados"
           echo "📢 Release creado en GitHub"
-          echo "🚀 Ready para desplegar a Vercel"
+          echo "✅ Nueva versión: v${NEW_VERSION}"
           echo "════════════════════════════════════════"

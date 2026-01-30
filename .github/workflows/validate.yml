@@ -47,19 +47,6 @@ jobs:
           fi
           echo "✅ manifest.json es válido"
       
-      # Validar vercel.json
-      - name: ✅ Validar vercel.json
-        run: |
-          if [ ! -f "vercel.json" ]; then
-            echo "❌ ERROR: vercel.json no encontrado"
-            exit 1
-          fi
-          if ! python3 -m json.tool vercel.json > /dev/null; then
-            echo "❌ ERROR: vercel.json no es JSON válido"
-            exit 1
-          fi
-          echo "✅ vercel.json es válido"
-      
       # Verificar archivos críticos existen
       - name: 📂 Verificar archivos críticos
         run: |
@@ -167,7 +154,7 @@ jobs:
           echo ""
           echo "Validaciones ejecutadas:"
           echo "  ✅ HTML válido"
-          echo "  ✅ JSON válido (manifest, vercel, package)"
+          echo "  ✅ JSON válido (manifest, package)"
           echo "  ✅ Archivos críticos existen"
           echo "  ✅ Scripts referenciados"
           echo "  ✅ Service Worker válido"

@@ -12,13 +12,13 @@ class APIClient {
     }
 
     /**
-     * Envía datos a Google Sheets a través de Vercel API (más seguro)
+     * Envía datos a Google Sheets a través de la API
      * @param {Object} data - Datos a sincronizar
      * @returns {Promise<Object>} - Resultado del envío
      */
     async sendToGoogleSheets(data) {
         try {
-            // Usar Vercel API como proxy (las credenciales están en el servidor)
+            // Usar API como proxy (las credenciales están en el servidor)
             const response = await this._fetchWithTimeout('/api/send-to-sheets', {
                 method: "POST",
                 headers: {

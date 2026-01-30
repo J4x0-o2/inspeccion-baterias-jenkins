@@ -3,7 +3,7 @@
 // ============================================
 // ⚠️ IMPORTANTE: Este archivo se sirve al navegador
 // NO incluir credenciales, tokens o datos sensibles aquí
-// Las credenciales están en Vercel como Environment Variables
+// Las credenciales están en variables de entorno del servidor
 
 // REFERENCIAS BASE (PÚBLICAS - Info. general de baterías)
 const REFERENCIAS_BASE = [

@@ -4,7 +4,6 @@
   "description": "PWA para inspección de baterías con sincronización en Google Sheets",
   "main": "index.html",
   "scripts": {
-    "build": "echo 'Static site - no build needed'",
-    "deploy": "vercel --prod"
+    "build": "echo 'Static site - no build needed'"
   }
 }

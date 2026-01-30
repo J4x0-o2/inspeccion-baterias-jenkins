@@ -1,5 +1,5 @@
 /**
- * Vercel API: Guardar inspecciones en Google Sheets
+ * API: Guardar inspecciones en Google Sheets
  * Proxy seguro que reenvía datos de inspecciones a Google Apps Script
  */
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       console.error('⚠️ ERROR: GOOGLE_SHEET_URL no configurada en variables de entorno');
       return res.status(500).json({
         ok: false,
-        error: 'GOOGLE_SHEET_URL no configurada en el servidor. Verifica vercel.json'
+        error: 'GOOGLE_SHEET_URL no configurada en el servidor'
       });
     }
 
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     return res.status(500).json({
       ok: false,
       error: error.message,
-      details: 'Revisa los logs en Vercel para más información'
+      details: 'Revisa los logs del servidor para más información'
     });
   }
 }

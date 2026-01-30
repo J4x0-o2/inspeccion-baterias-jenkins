@@ -1,10 +1,8 @@
 node_modules/
 .env.local
 .env
-.netlify
 .DS_Store
 *.log
 npm-debug.log*
-.vercel
 documentacion/
 CHANGELOG.md
